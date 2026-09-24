@@ -1,16 +1,631 @@
-<!doctype html>
-<html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2306b6d4' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>RoadShield AI — Safer rides. Smarter roads.</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body class="bg-[#020712] text-slate-100 min-h-screen antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadShield Prototype</title>
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: { 900: '#0a0f1e', 800: '#0d1526', 700: '#111d35', 600: '#162040' },
+                        accent: { blue: '#3b82f6', cyan: '#06b6d4' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0a0f1e; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0d1526; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        .animate-scan { animation: scan 2s linear infinite; }
+        @keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+        .animate-pulse-ring { animation: pulse-ring 1.5s ease-out infinite; }
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+    <script type="text/babel">
+        const { useState, useEffect, Fragment } = React;
+        // --- SVGs & Icons ---
+        const Icons = {useState, useEffect, Fragment } = React;
+        // --- SVGs & Icons ---
+        const Icons = {
+            Shield: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>,
+            Video: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>,
+            Map: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>,
+            User: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+            LayoutDashboard: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>,
+            FileText: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
+            Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+                    // --- Mock Data & State ---
+        const DEMO_USER = { name: 'Dhairya', role: 'Rider', credits: 420 };
+        const DEMO_INCIDENT = {
+            id: 'RS20481',
+            type: 'Possible Phone Distraction',
+            confidence: 91,
+            timestamp: '00:17 - 00:21',
+            location: 'Sector 128, Noida',
+            evidenceIntegrity: 96,
+            date: 'Today',
+            priority: 'High'
+        };
+        // --- Shared Components ---
+        const Card = ({ children, className = '' }) => (
+            <div className={`bg-navy-800 border border-slate-800 rounded-xl p-4 md:p-6 ${className}`}>{children}</div>
+        );
+        const Button = ({ children, onClick, variant = 'primary', className = '', disabled = false }) => {
+            const base = "px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2";
+            const variants = {
+                primary: "bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50",
+                secondary: "bg-slate-800 hover:bg-slate-700 text-white border border-slate-700",
+                danger: "bg-red-600/20 text-red-500 hover:bg-red-600/30 border border-red-500/30",
+                success: "bg-green-600 hover:bg-green-700 text-white"
+            };
+            return (
+                <button disabled={disabled} onClick={onClick} className={`${base} ${variants[variant]} ${className}`}>
+                    {children}
+                </button>
+            );
+        };
+        const DemoBadge = () => <span className="inline-block px-2 py-1 bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded text-[10px] font-bold uppercase tracking-wider">Demo Data</span>;
+        const SimulatedBadge = () => <span className="inline-block px-2 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded text-[10px] font-bold uppercase tracking-wider mb-2">Simulated Demo Feature</span>;
+                                {['Rider', 'Safety Reviewer', 'Fleet Manager'].map(role => (
+                            <button key={role} onClick={() => {
+                                setUser({ ...DEMO_USER, role });
+                                navigate('dashboard');
+                            }} className="w-full p-4 border border-slate-700 rounded-lg hover:border-blue-500 hover:bg-navy-700 transition text-left flex justify-between items-center">
+                                <span>{role}</span>
+                                <Icons.Check />
+                            </button>
+                        ))}
+                    </div>
+                </Card>
+            </div>
+        );
+        const Dashboard = ({ navigate, user }) => (
+            <div className="space-y-6 fade-in">
+                <header className="flex justify-between items-end">
+                    <div>
+                        <h1 className="text-2xl font-bold">Good evening, {user?.name}</h1>
+                        <p className="text-slate-400 text-sm mt-1">Ready for your next ride?</p>
+                    </div>
+                    <DemoBadge />
+                </header>
+                <div className="grid md:grid-cols-2 gap-6">
+                    <Card>
+                        <h3 className="font-semibold text-lg mb-4">Today's Ride</h3>
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="bg-navy-900 p-3 rounded-lg border border-slate-800">
+                                <p className="text-xs text-slate-400">Distance</p>
+                                <p className="text-xl font-bold">12.4 km</p>
+                            </div>
+                            <div className="bg-navy-900 p-3 rounded-lg border border-slate-800">
+                                <p className="text-xs text-slate-400">Duration</p>
+                                <p className="text-xl font-bold">34 min</p>
+                            </div>
+                        </div>
+                        <h4 className="text-sm font-medium text-slate-300 mb-3">Riding Behaviour</h4>
+                        <ul className="space-y-2 text-sm">
+                            <li className="flex justify-between items-center"><span className="text-slate-400">Helmet</span> <span         };
+        const AIAnalysis = ({ navigate }) => {
+            const [progress, setProgress] = useState(0);
+            const [done, setDone] = useState(false);
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    setProgress(p => {
+                        if (p >= 100) {
+                            clearInterval(interval);
+                            setDone(true);
+                            return 100;
+                        }
+                        return p + 5;
+                    });
+                }, 150);
+                return () => clearInterval(interval);
+            }, []);
+            return (
+                <div className="max-w-2xl mx-auto space-y-6 fade-in">
+                    <div>
+                        <h1 className="text-2xl font-bold">Analysing Road Footage</h1>
+                        <p className="text-slate-400 text-sm mt-1">Processing frames for possible safety events...</p>
+                    </div>
+                    
+                    <Card className="overflow-hidden relative p-0 border-slate-700">
+                        <div className="aspect-video bg-slate-900 relative">
+                            {/* Fake video background */}
+                            <div className="absolute inset-0 bg-gradient-to-b from-navy-800 to-navy-900">
+                                <div className="absolute bottom-0 w-full h-1/2 bg-slate-800/50 perspective-1000">
+                                    <div className="w-8 h-full bg-white/10 mx-auto transform skew-x-12"></div>
+                                </div>
+                            </div>
+                            
+                            {!done && (
+                                <div className="absolute inset-0 border-b-2 border-blue-500 shadow-[0_4px_15px_rgba(59,130,246,0.5)] animate-scan pointer-events-none"></div>
+                            )}
+                                                        <StatusBadge status={incidentStatus} />
+                        </div>
+                        <DemoBadge />
+                    </div>
+                    <Card className="p-0 overflow-hidden">
+                        <div className="aspect-video bg-slate-900 relative border-b border-slate-700">
+                             <div className="absolute inset-0 flex items-center justify-center">
+                                 <div className="w-64 h-32 border-2 border-yellow-500 border-dashed rounded flex flex-col items-center justify-center bg-yellow-500/10">
+                                    <span className="text-yellow-400 font-bold text-sm bg-navy-900 px-2 py-1 rounded">Flagged Region</span>
+                                    <span className="text-slate-400 text-xs mt-2">{DEMO_INCIDENT.timestamp}</span>
+                                 </div>
+                             </div>
+                        </div>
+                        <div className="p-6 grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h3 className="text-slate-400 text-sm mb-1">Possible Incident</h3>
+                                <p className="font-medium text-lg text-white mb-4">{DEMO_INCIDENT.type}</p>
+                                
+                                <h3 className="text-slate-400 text-sm mb-1">AI Confidence</h3>
+                                <p className="font-medium text-white mb-4">{DEMO_INCIDENT.confidence}%</p>
+                                
+                                <h3 className="text-slate-400 text-sm mb-1">Location</h3>
+                                <p className="font-medium text-white">{DEMO_INCIDENT.location}</p>
+                            </div>
+                            <div className="bg-navy-900 p-4 rounded-lg border border-slate-800">
+                                <h3 className="font-medium text-sm mb-3">Evidence Integrity Checks</h3>
+                                <ul className="space-y-2 text-xs text-slate-300">
+                                    <li className="flex justify-between"><span>Original file checked</span> <span className="text-green-400">✓</span></li>
+                                    <li className="flex justify-between"><span>Timestamp available</span> <span className="text-green-400">✓</span></li>
+                                    <li className="flex justify-between"><span>Location metadata</span> <span className="text-green-400">✓</span></li>
+                                </ul>
+                                <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between">
+                                    <span className="text-sm text-slate-400">Integrity Score</span>
+                                    <span className="text-sm font-bold text-green-400">{DEMO_INCIDENT.evidenceIntegrity}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                                        <Card>
+                            <h3 className="font-semibold mb-4">Quick Actions</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button variant="secondary" className="py-6 flex-col gap-2" onClick={() => navigate('map')}><Icons.Map /> Safety Map</Button>
+                                <Button variant="secondary" className="py-6 flex-col gap-2" onClick={() => navigate('review')}><Icons.Shield /> Review Centre</Button>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+        );
+        const AnalyseRide = ({ navigate }) => {
+            const [loaded, setLoaded] = useState(false);
+            return (
+                <div className="max-w-2xl mx-auto space-y-6 fade-in">
+                    <div>
+                        <h1 className="text-2xl font-bold">Analyse a Ride</h1>
+                        <p className="text-slate-400 text-sm mt-1">Upload road footage to identify possible safety events.</p>
+                    </div>
+                    <Card className="flex flex-col items-center justify-center p-12 border-dashed border-2 border-slate-700 bg-navy-900/50">
+                        <Icons.Video />
+                        <p className="mt-4 font-medium mb-2">{loaded ? "Demo footage loaded" : "Upload road footage"}</p>
+                                         {!loaded ? (
+                            <Button variant="secondary" onClick={() => setLoaded(true)}>Upload Demo Video</Button>
+                        ) : (
+                            <Button onClick={() => navigate('analysis')}>Start AI Analysis</Button>
+                        )}
+                    </Card>
+                    <div className="text-xs text-slate-500 text-center">
+                        AI only identifies possible incidents. All flags require human review.
+                    </div>
+                </div>
+            );
+        };
+        const AIAnalysis = ({ navigate }) => {
+            const [progress, setProgress] = useState(0);
+            const [done, setDone] = useState(false);
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    setProgress(p => {
+                        if (p >= 100) {
+                            clearInterval(interval);
+                            setDone(true);
+                            return 100;
+                        }
+                        return p + 5;
+                                    });
+                }, 150);
+                return () => clearInterval(interval);
+            }, []);
+            return (
+                <div className="max-w-2xl mx-auto space-y-6 fade-in">
+                    <div>
+                        <h1 className="text-2xl font-bold">Analysing Road Footage</h1>
+                        <p className="text-slate-400 text-sm mt-1">Processing frames for possible safety events...</p>
+                    </div>
+                    
+                    <Card className="overflow-hidden relative p-0 border-slate-700">
+                        <div className="aspect-video bg-slate-900 relative">
+                            {/* Fake video background */}
+                            <div className="absolute inset-0 bg-gradient-to-b from-navy-800 to-navy-900">
+                                <div className="absolute bottom-0 w-full h-1/2 bg-slate-800/50 perspective-1000">
+                                    <div className="w-8 h-full bg-white/10 mx-auto transform skew-x-12"></div>
+                                </div>
+                            </div>
+                            
+                            {!done && (
+                                <div className="absolute inset-0 border-b-2 border-blue-500 shadow-[0_4px_15px_rgba(59,130,246,0.5)] animate-scan pointer-events-none"></div>
+                            )}
+                               )}
+                            
+                            {done && (
+                                <div className="absolute inset-12 border-2 border-yellow-500 bg-yellow-500/10 rounded flex items-center justify-center fade-in">
+                                    <div className="bg-navy-900/90 text-yellow-400 px-4 py-2 rounded font-bold uppercase text-sm border border-yellow-500/50">
+                                        ⚠ Possible Incident Detected
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 bg-navy-800">
+                            <div className="w-full bg-slate-800 rounded-full h-2 mb-4 overflow-hidden">
+                                <div className="bg-blue-500 h-2 rounded-full transition-all duration-200" style={{ width: `${progress}%` }}></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
+                                <div className="flex gap-2"><span className={progress > 10 ? 'text-green-400' : ''}>✓ Vehicle detected</span></div>
+                                <div className="flex gap-2"><span className={progress > 30 ? 'text-green-400' : ''}>✓ Road detected</span></div>
+                                <div className="flex gap-2"><span className={progress > 60 ? 'text-green-400' : ''}>✓ Helmet checked</span></div>
+                                <div className="flex gap-2"><span className={progress > 80 ? 'text-green-400' : ''}>✓ Phone behaviour analysed</span></div>
+                            </div>
+                        </div>
+                    </Card>
+                                        {done && (
+                        <Card className="border-yellow-500/50 bg-yellow-500/5 fade-in">
+                            <h3 className="text-yellow-400 font-bold mb-2">POSSIBLE INCIDENT DETECTED</h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <div>
+                                    <p className="text-lg font-medium">{DEMO_INCIDENT.type}</p>
+                                    <p className="text-sm text-slate-400">Confidence: {DEMO_INCIDENT.confidence}% | Timestamp: {DEMO_INCIDENT.timestamp}</p>
+                                </div>
+                            </div>
+                            <p className="text-xs text-slate-400 mb-4 bg-navy-900 p-3 rounded border border-slate-800">
+                                ℹ AI has identified a possible incident. A human reviewer must confirm it. AI confidence does not mean guilt.
+                            </p>
+                            <Button onClick={() => navigate('evidence')} className="w-full">View Evidence</Button>
+                        </Card>
+                    )}
+                </div>
+            );
+        };
+        const Evidence = ({ navigate, incidentStatus, setIncidentStatus }) => {
+            const handleSendToReview = () => {
+                setIncidentStatus('Waiting for human review');
+                navigate('review');
+            };
+                    };
+            return (
+                <div className="max-w-3xl mx-auto space-y-6 fade-in">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h1 className="text-2xl font-bold mb-2">Incident #{DEMO_INCIDENT.id}</h1>
+                            <StatusBadge status={incidentStatus} />
+                        </div>
+                        <DemoBadge />
+                    </div>
+                    <Card className="p-0 overflow-hidden">
+                        <div className="aspect-video bg-slate-900 relative border-b border-slate-700">
+                             <div className="absolute inset-0 flex items-center justify-center">
+                                 <div className="w-64 h-32 border-2 border-yellow-500 border-dashed rounded flex flex-col items-center justify-center bg-yellow-500/10">
+                                    <span className="text-yellow-400 font-bold text-sm bg-navy-900 px-2 py-1 rounded">Flagged Region</span>
+                                    <span className="text-slate-400 text-xs mt-2">{DEMO_INCIDENT.timestamp}</span>
+                                 </div>
+                             </div>
+                                     </div>
+                        <div className="p-6 grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h3 className="text-slate-400 text-sm mb-1">Possible Incident</h3>
+                                <p className="font-medium text-lg text-white mb-4">{DEMO_INCIDENT.type}</p>
+                                
+                                <h3 className="text-slate-400 text-sm mb-1">AI Confidence</h3>
+                                <p className="font-medium text-white mb-4">{DEMO_INCIDENT.confidence}%</p>
+                                
+                                <h3 className="text-slate-400 text-sm mb-1">Location</h3>
+                                <p className="font-medium text-white">{DEMO_INCIDENT.location}</p>
+                            </div>
+                            <div className="bg-navy-900 p-4 rounded-lg border border-slate-800">
+                                <h3 className="font-medium text-sm mb-3">Evidence Integrity Checks</h3>
+                                <ul className="space-y-2 text-xs text-slate-300">
+                                    <li className="flex justify-between"><span>Original file checked</span> <span className="text-green-400">✓</span></li>
+                                    <li className="flex justify-between"><span>Timestamp available</span> <span className="text-green-400">✓</span></li>
+                                    <li className="flex justify-between"><span>Location metadata</span> <span className="text-green-400">✓</span></li>
+                                </ul>
+                                                <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between">
+                                    <span className="text-sm text-slate-400">Integrity Score</span>
+                                    <span className="text-sm font-bold text-green-400">{DEMO_INCIDENT.evidenceIntegrity}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                    <div className="flex gap-4">
+                        <Button className="flex-1" onClick={handleSendToReview}>Send for Human Review</Button>
+                        <Button variant="secondary" onClick={() => navigate('dashboard')}>Discard</Button>
+                    </div>
+                </div>
+            );
+        };
+        const ReviewCentre = ({ navigate, incidentStatus }) => (
+            <div className="space-y-6 fade-in">
+                <header className="flex justify-between items-end">
+                    <div>
+                        <h1 className="text-2xl font-bold">Review Centre</h1>
+                        <p className="text-slate-400 text-sm mt-1">Human verification queue</p>
+                    </div>
+                </header>
+                <div className="grid grid-cols-4 gap-4 mb-6">
+                    <Card className="text-center p-4"><p className="text-2xl font-bold">12</p><p className="text-xs text-slate-400">Pending</p></Card>
+                    <Card className="text-center p-4 border-red-500/30"><p className="text-2xl font-bold text-red-400">4</p><p className="text-xs text-slate-400">High Priority</p></Card>
+                    <Card className="text-center p-4"><p className="text-2xl font-bold text-yellow-400">5</p><p className="text-xs text-slate-400">Medium</p></Card>
+                    <Card className="text-center p-4"><p className="text-2xl font-bold text-blue-400">3</p><p className="text-xs text-slate-400">Low</p></Card>
+                </div>
+                                <div className="space-y-3">
+                    <Card className="flex items-center justify-between p-4 hover:bg-navy-700 transition cursor-pointer border-l-4 border-l-yellow-500" onClick={() => navigate('review-detail')}>
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-3">
+                                <span className="font-bold text-sm">#{DEMO_INCIDENT.id}</span>
+                                <StatusBadge status={incidentStatus} />
+                            </div>
+                            <span className="text-lg font-medium">{DEMO_INCIDENT.type}</span>
+                            <span className="text-xs text-slate-400">Confidence: {DEMO_INCIDENT.confidence}% | {DEMO_INCIDENT.location}</span>
+                        </div>
+                        <Button variant="secondary" onClick={(e) => { e.stopPropagation(); navigate('review-detail'); }}>Review</Button>
+                    </Card>
+                    {/* Dummy Items */}
+                    <Card className="flex items-center justify-between p-4 opacity-50">
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-3"><span className="font-bold text-sm">#RS20455</span></div>
+                            <span className="text-lg font-medium">Possible Unsafe Overtaking</span>
+                                              </div>
+                        <Button variant="secondary" disabled>Locked</Button>
+                    </Card>
+                </div>
+            </div>
+        );
+        const ReviewDetail = ({ navigate, incidentStatus, setIncidentStatus }) => {
+            const handleConfirm = () => {
+                setIncidentStatus('Verified by Human Reviewer');
+                navigate('map');
+            };
+            const handleReject = () => {
+                setIncidentStatus('Rejected');
+                navigate('review');
+            };
+            return (
+                <div className="max-w-4xl mx-auto space-y-6 fade-in">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h1 className="text-2xl font-bold mb-2">Review Task: #{DEMO_INCIDENT.id}</h1>
+                            <StatusBadge status={incidentStatus} />
+                        </div>
+                    </div>
+                                        <div className="bg-blue-900/20 border border-blue-500/30 p-4 rounded-lg text-blue-300 text-sm flex gap-3 items-center">
+                        <Icons.AlertTriangle />
+                        <p><strong>Reminder:</strong> AI only identifies possible incidents. The reviewer makes the final decision.</p>
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <div className="md:col-span-2 space-y-4">
+                            <div className="aspect-video bg-slate-900 rounded-xl relative border border-slate-700">
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="border border-yellow-500 bg-yellow-500/20 p-2 text-xs text-yellow-400">
+                                        Frame {DEMO_INCIDENT.timestamp}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <Button className="flex-1" variant="success" onClick={handleConfirm}>Confirm Incident</Button>
+                                <Button className="flex-1" variant="danger" onClick={handleReject}>Reject</Button>
+                                <Button className="flex-1" variant="secondary">Request Info</Button>
+                            </div>
+                        </div>
+                                          <div className="space-y-4">
+                            <Card className="p-4">
+                                <h3 className="font-bold text-sm mb-4 border-b border-slate-700 pb-2">Detection Details</h3>
+                                <div className="space-y-3 text-sm">
+                                    <div><p className="text-slate-400 text-xs">Flagged Event</p><p>{DEMO_INCIDENT.type}</p></div>
+                                    <div><p className="text-slate-400 text-xs">AI Confidence</p><p className="text-yellow-400 font-bold">{DEMO_INCIDENT.confidence}%</p></div>
+                                    <div><p className="text-slate-400 text-xs">Location</p><p>{DEMO_INCIDENT.location}</p></div>
+                                    <div><p className="text-slate-400 text-xs">Time</p><p>{DEMO_INCIDENT.timestamp}</p></div>
+                                </div>
+                            </Card>
+                            <Card className="p-4 bg-navy-900">
+                                <p className="text-xs text-slate-400 leading-relaxed">
+                                    By clicking confirm, you verify that a safety violation occurred based on visual evidence, independent of the AI prediction.
+                                </p>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+            const SafetyMap = () => (
+            <div className="h-full flex flex-col space-y-4 fade-in">
+                <header className="flex justify-between items-end">
+                    <div>
+                        <h1 className="text-2xl font-bold">Safety Map</h1>
+                        <p className="text-slate-400 text-sm mt-1">Verified incident hotspots</p>
+                    </div>
+                    <DemoBadge />
+                </header>
+                <Card className="flex-1 min-h-[400px] relative p-0 overflow-hidden border-slate-700">
+                    {/* Mock Map Background */}
+                    <div className="absolute inset-0 bg-[#060a13] opacity-80" style={{
+                        backgroundImage: `radial-gradient(#1e293b 1px, transparent 1px)`,
+                        backgroundSize: '20px 20px'
+                    }}></div>
+                    
+                    {/* Hotspot */}
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group">
+                        <div className="absolute inset-0 bg-red-500 rounded-full animate-pulse-ring"></div>
+                        <div className="relative w-6 h-6 bg-red-500 rounded-full border-2 border-white flex items-center justify-center z-10 shadow-lg"></div>
+                        
+                              {/* Tooltip */}
+                        <div className="absolute bottom-full mb-4 left-1/2 transform -translate-x-1/2 w-64 bg-navy-800 border border-slate-700 p-4 rounded-xl shadow-2xl opacity-100 transition-opacity z-20 hidden group-hover:block">
+                            <h3 className="font-bold text-white mb-1">Sector 128</h3>
+                            <p className="text-xs text-slate-400 mb-3">24 reported events</p>
+                            <div className="space-y-2 text-xs">
+                                <div className="flex justify-between"><span className="text-slate-400">Peak time:</span> <span>6 PM – 9 PM</span></div>
+                                <div className="border-t border-slate-700 pt-2 mt-2">
+                                    <span className="text-slate-400 block mb-1">Patterns:</span>
+                                    <div className="flex gap-2 flex-wrap">
+                                        <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded">Phone use</span>
+                                        <span className="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">No helmet</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                              
+                    {/* Overlay UI */}
+                    <div className="absolute top-4 left-4 flex gap-2">
+                        <Button variant="secondary" className="text-xs py-1 px-3 bg-navy-900">All</Button>
+                        <Button variant="secondary" className="text-xs py-1 px-3">Phone</Button>
+                        <Button variant="secondary" className="text-xs py-1 px-3">Helmet</Button>
+                    </div>
+                    <div className="absolute bottom-4 right-4 bg-navy-900 border border-slate-700 p-2 text-[10px] text-slate-400 rounded">
+                        Not real-time government traffic data. Demo purposes only.
+                    </div>
+                </Card>
+            </div>
+        );
+        const Emergency = () => (
+            <div className="h-full flex flex-col items-center justify-center fade-in text-center p-6">
+                <SimulatedBadge />
+                <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                    <Icons.AlertTriangle className="text-red-500 w-12 h-12" />
+                </div>
+
+                     <h1 className="text-3xl font-bold text-red-500 mb-2">Possible Crash Detected</h1>
+                <p className="text-slate-400 mb-8 max-w-sm">Movement change and impact pattern detected. Initiating emergency protocol in 10 seconds.</p>
+                <div className="text-6xl font-bold mb-8">10</div>
+                <div className="flex gap-4">
+                    <Button variant="secondary" className="px-8 py-4 text-lg">I'M OK</Button>
+                    <Button variant="danger" className="px-8 py-4 text-lg bg-red-600 text-white hover:bg-red-700">SEND ALERT</Button>
+                </div>
+            </div>
+        );
+        const PlaceholderPage = ({ title }) => (
+            <div className="h-full flex flex-col items-center justify-center text-slate-500 fade-in">
+                <Icons.FileText />
+                <h2 className="mt-4 text-xl">{title}</h2>
+                <p className="text-sm mt-2">Secondary screen placeholder</p>
+            </div>
+        );
+        // --- Main App & Navigation ---
+        const App = () => {
+            const [path, setPath] = useState('landing');
+            const [user, setUser] = useState(null);
+            const [incidentStatus, setIncidentStatus] = useState('Awaiting Human Review');
+            const [sidebarOpen, setSidebarOpen] = useState(false);
+                        const navigate = (newPath) => {
+                setPath(newPath);
+                setSidebarOpen(false);
+            };
+            if (path === 'landing') return <Landing navigate={navigate} />;
+            if (path === 'signup') return <Signup navigate={navigate} setUser={setUser} />;
+            const navItems = [
+                { id: 'dashboard', icon: Icons.LayoutDashboard, label: 'Dashboard' },
+                { id: 'analyse', icon: Icons.Video, label: 'Analyse Ride' },
+                { id: 'review', icon: Icons.Shield, label: 'Review Centre' },
+                { id: 'map', icon: Icons.Map, label: 'Safety Map' },
+                { id: 'emergency', icon: Icons.AlertTriangle, label: 'Emergency' },
+            ];
+            const renderContent = () => {
+                switch (path) {
+                    case 'dashboard': return <Dashboard navigate={navigate} user={user} />;
+                    case 'analyse': return <AnalyseRide navigate={navigate} />;
+                    case 'analysis': return <AIAnalysis navigate={navigate} />;
+                         case 'evidence': return <Evidence navigate={navigate} incidentStatus={incidentStatus} setIncidentStatus={setIncidentStatus} />;
+                    case 'review': return <ReviewCentre navigate={navigate} incidentStatus={incidentStatus} />;
+                    case 'review-detail': return <ReviewDetail navigate={navigate} incidentStatus={incidentStatus} setIncidentStatus={setIncidentStatus} />;
+                    case 'map': return <SafetyMap navigate={navigate} />;
+                    case 'emergency': return <Emergency />;
+                    default: return <PlaceholderPage title={path.charAt(0).toUpperCase() + path.slice(1)} />;
+                }
+            };
+            return (
+                <div className="flex h-screen bg-navy-900 overflow-hidden text-slate-100">
+                    {/* Desktop Sidebar */}
+                    <aside className="hidden md:flex flex-col w-64 bg-navy-800 border-r border-slate-800 flex-shrink-0">
+                        <div className="p-6 border-b border-slate-800 flex items-center gap-3">
+                            <div className="bg-blue-600 p-1.5 rounded-lg"><Icons.Shield /></div>
+                            <span className="font-bold text-xl tracking-tight">RoadShield</span>
+                        </div>
+                        <nav className="flex-1 py-4 px-3 space-y-1">
+                  {navItems.map(item => (
+                                <button key={item.id} onClick={() => navigate(item.id)}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${path === item.id || (path.startsWith(item.id) && item.id !== 'dashboard') ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                                    <item.icon />
+                                    {item.label}
+                                </button>
+                            ))}
+                        </nav>
+                        <div className="p-4 border-t border-slate-800">
+                            <div className="flex items-center gap-3 bg-navy-900 p-3 rounded-lg border border-slate-800">
+                                <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
+                                    {user?.name?.[0] || 'U'}
+                                </div>
+                                <div className="text-left flex-1">
+                                    <p className="text-sm font-medium text-white">{user?.name || 'Demo User'}</p>
+                                    <p className="text-xs text-slate-500">{user?.role || 'Guest'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                                        {/* Mobile Header & Sidebar overlay */}
+                    <header className="md:hidden absolute top-0 left-0 right-0 h-16 bg-navy-800 border-b border-slate-800 flex items-center justify-between px-4 z-20">
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-slate-400 p-2"><Icons.Menu /></button>
+                        <div className="flex items-center gap-2 font-bold"><Icons.Shield className="text-blue-500 w-5 h-5"/> RoadShield</div>
+                        <div className="w-8"></div>
+                    </header>
+                    
+                    {sidebarOpen && (
+                        <div className="fixed inset-0 z-50 md:hidden bg-navy-900/95 backdrop-blur pt-16 px-4">
+                            <button onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 text-slate-400 p-2"><Icons.X /></button>
+                            <nav className="flex flex-col gap-2 mt-4">
+                                {navItems.map(item => (
+                                    <button key={item.id} onClick={() => navigate(item.id)}
+                                        className="flex items-center gap-4 px-4 py-4 rounded-lg bg-navy-800 border border-slate-800 text-left">
+                                        <item.icon /> {item.label}
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                    )}
+                                        {/* Main Content Area */}
+                    <main className="flex-1 flex flex-col pt-16 md:pt-0 overflow-y-auto">
+                        <div className="p-4 md:p-8 max-w-6xl mx-auto w-full pb-24 md:pb-8">
+                            {renderContent()}
+                        </div>
+                    </main>
+                    {/* Mobile Bottom Nav */}
+                    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-navy-800 border-t border-slate-800 flex justify-around p-2 pb-safe z-10">
+                        {navItems.slice(0, 4).map(item => (
+                            <button key={item.id} onClick={() => navigate(item.id)}
+                                className={`flex flex-col items-center gap-1 p-2 ${path === item.id ? 'text-blue-500' : 'text-slate-500'}`}>
+                                <div className="w-5 h-5"><item.icon /></div>
+                                <span className="text-[10px] font-medium">{item.label.split(' ')[0]}</span>
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
 </html>
